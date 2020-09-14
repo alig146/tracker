@@ -123,14 +123,11 @@ const EventPartition partition(const Event& points,
           (coordinate == Coordinate::X && (next.x > point.x + interval)) ||
           (coordinate == Coordinate::Y && (next.y > point.y + interval)) ||
           (coordinate == Coordinate::Z && (next.z > point.z + interval))) {
-		  //		std::cout << "parition_y: " << point.y << " next_y: " << next.y << " interval: " << interval << std::endl;  
         break;
       }
-	  //	  std::cout << "passed_next: " << next.y << std::endl;
       current_layer.push_back(next);
       ++count;
     }
-
     parts.push_back(t_sort(current_layer));
   }
 

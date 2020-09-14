@@ -46,7 +46,7 @@ struct tracking_options {
   path_type    geometry_file              = "";
   path_type    geometry_map_file          = "";
   path_type    geometry_time_file         = "";
-  real         default_time_error         = 2 * units::time;
+  real         default_time_error         = 1.5 * units::time;
 
   path_vector  data_directories           = {""};
   real_vector  data_timing_offsets        = {0};

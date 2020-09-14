@@ -73,7 +73,7 @@ const r4_point event_density(const digi_event& digi_points);
 // TODO: real geometric_event_density(const full_event& points);
 //----------------------------------------------------------------------------------------------
 
-//__version one digi_event (output for optimized for digi tree)_________________________________
+//__version one digi_event (output optimized for digi tree)_____________________________________
 template<class Geometry=void>
 const digi_event full_digi_event(const event& points, const energy_event& energy_points, const complete_event& complete_points) {
 
@@ -81,6 +81,7 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
   complete_event c_time_sorted = t_sort(c_out);
 
   std::vector<long double> detector_ids;
+  detector_ids.clear();
   detector_ids.reserve(c_time_sorted.size());
   for (const auto& h : c_time_sorted) {
       detector_ids.push_back(h.det_id);
@@ -88,10 +89,9 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
   util::algorithm::sort_range(detector_ids);
   detector_ids.erase(std::unique(detector_ids.begin(), detector_ids.end()), detector_ids.cend());
 
-
   digi_event full_digi_out;
+  full_digi_out.clear();
   full_digi_out.reserve(detector_ids.size());
-
 
   const auto spacing = 20 * units::time;
   const auto threshold = 0.65 * units::energy;
@@ -109,22 +109,31 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 
 	  int counter = 0;
 	  std::vector<long double> times;
+	  times.clear();
 	  times.reserve(counter);
 	  std::vector<long double> zs;
+	  zs.clear();
       zs.reserve(counter);
 	  std::vector<long double> ys;
+	  ys.clear();
       ys.reserve(counter);
 	  std::vector<long double> xs;
+	  xs.clear();
       xs.reserve(counter);
 	  std::vector<long double> pxs;
+	  pxs.clear();
 	  pxs.reserve(counter);
 	  std::vector<long double> pys;
+	  pys.clear();
 	  pys.reserve(counter);
 	  std::vector<long double> pzs;
+	  pzs.clear();
 	  pzs.reserve(counter);
 	  std::vector<long double> deposits;
+	  deposits.clear();
       deposits.reserve(counter);
 	  std::vector<double> inds;
+	  inds.clear();
 	  inds.reserve(counter);
 
       for (const auto& h : c_time_sorted) {
@@ -197,18 +206,17 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 	                      	   	 energy_sum * units::energy, ((weighted_px/energy_sum)) * units::momentum, ((weighted_py/energy_sum)) * units::momentum, ((weighted_pz/energy_sum)) * units::momentum, indices});
       }
   }
-  // std::cout << "SSSSSSSSSSSSS: " << full_digi_out.size() <<std::endl;
-  return full_digi_out;
+  return t_sort(full_digi_out);
 }
+//----------------------------------------------------------------------------------------------
 
-//__version two digi_event (output for optimized for tracking)_______________________________________________________________
+//__version two digi_event (output optimized for tracking)______________________________________
 template<class Geometry=void>
 const event add_digi_event(const event& points, const energy_event& energy_points, const complete_event& complete_points) {
 
   complete_event c_out = complete_points;
   complete_event c_time_sorted = t_sort(c_out);
 
-  // std::cout << "CCCCCCCCCCCCCCCCCCCC: " << c_time_sorted;
 
   std::vector<long double> detector_ids;
   detector_ids.reserve(c_time_sorted.size());
@@ -234,14 +242,19 @@ const event add_digi_event(const event& points, const energy_event& energy_point
 
 	  int counter = 0;
 	  std::vector<long double> times;
+	  times.clear();
 	  times.reserve(counter);
 	  std::vector<long double> zs;
+	  zs.clear();
       zs.reserve(counter);
 	  std::vector<long double> ys;
+	  ys.clear();
       ys.reserve(counter);
 	  std::vector<long double> xs;
+	  xs.clear();
       xs.reserve(counter);
 	  std::vector<long double> deposits;
+	  deposits.clear();
       deposits.reserve(counter);
 
       for (const auto& h : c_time_sorted) {
@@ -295,33 +308,9 @@ const event add_digi_event(const event& points, const energy_event& energy_point
 	  }
 
   }
-  //  std::cout << "NNNNNNNNNNNNNNNNNNNNNNN: " << digi_out <<std::endl;
-  return digi_out;
+  return t_sort(digi_out);
 }
-
-
-// template<class Geometry=void>
-// const full_hit add_digi(const hit& point, const energy_hit& energy_point) {
-//   const auto volume = geometry::custom::volume<Geometry>(point);
-//   const auto limits = geometry::custom::limits_of<Geometry>(volume);
-//   const auto center = limits.center;
-//   const auto min = limits.min;
-//   const auto max = limits.max;
-//   return full_hit{
-// 	point.t, center.x, center.y, point.z,
-// 		{geometry::custom::time_resolution_of<Geometry>(volume),
-// 				max.x - min.x,
-// 				max.y - min.y,
-// 				max.z - min.z}};
-// }
-// template<class Geometry=void>
-// const full_event add_digi(const event& points, const energy_event& energy_points) {
-//   full_event out;
-//   out.reserve(points.size());
-//   util::algorithm::back_insert_transform_two(points, energy_points, out,
-//     [](const auto& point, const auto& energy_point) { return add_digi<Geometry>(point, energy_point); });
-//   return out;
-// }
+//----------------------------------------------------------------------------------------------
 
 //__Find The Errors Associated with a Hit from Geometry_________________________________________
 template<class Geometry=void>

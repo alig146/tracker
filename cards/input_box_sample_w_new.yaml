@@ -19,7 +19,7 @@ event-density-limit:   0.00001
 
 # Geometry Setup
 geometry-file:                demo/box/resources/world.gdml
-geometry-default-time-error:  1.0
+geometry-default-time-error:  1.5
 layer-count:                  9
 scintillator_z_width:         450.0 
 scintillator_x_width:         4.5
@@ -44,7 +44,7 @@ data-parent-id-key:        Hit_G4ParentTrackId
 data-momentum-keys:        Hit_energy, Hit_particlePx, Hit_particlePy, Hit_particlePz
 
 # Statistics Setup
-statistics-directory:       /home/ag1378/cmslink/bobthebuilder/tracker
+statistics-directory:       /home/ag1378/cmslink/bobthebuilder/tracker/output
 statistics-file-prefix:     statistics
 statistics-file-extension:  root
 # merge-output-trees:         true

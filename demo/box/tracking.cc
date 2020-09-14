@@ -36,7 +36,6 @@
 #pragma link C++ class std::vector<double>+;
 #endif
 
-
 //__Namespace Alias_____________________________________________________________________________
 namespace analysis = MATHUSLA::TRACKER::analysis;
 namespace mc       = analysis::mc;
@@ -51,6 +50,8 @@ namespace util     = MATHUSLA::util;
 
 namespace MATHUSLA {
 
+
+std::vector<double> layer_center = {6002.5, 6105.5, 8002.5, 8105.5, 8502.5, 8605.5, 8708.5, 8811.5, 8914.5};
 
 
 //__Alter Event_________________________________________________________________________________
@@ -86,7 +87,6 @@ const analysis::track_vector find_tracks(const analysis::full_event& event,
       {options.line_width},
       {0.9L * units::speed_of_light}});
 
-
   // for (const auto& seed : seeds) {
   // 	  //    for (std::size_t i{}; i < seed.size() - 1UL; ++i)
   // 	  //      canvas.add_line(type::reduce_to_r4(seed[i]), type::reduce_to_r4(seed[i + 1UL]), 1, plot::color::BLACK);
@@ -95,15 +95,75 @@ const analysis::track_vector find_tracks(const analysis::full_event& event,
   //   std::cout << "\n";
   // }
 
-
   const auto joined = analysis::join_all(seeds);
   auto first_tracks = analysis::independent_fit_seeds(joined, options.layer_axis);
 
-  for (auto& track : first_tracks)
+  for (auto& track : first_tracks) {
     track.prune_on_chi_squared(limit_chi_squared);
+  }
 
   const auto out = analysis::overlap_fit_tracks(first_tracks, overlap);
   non_track_points = analysis::non_tracked_points(event, out, true);
+  return out;
+}
+//----------------------------------------------------------------------------------------------
+
+//__Insert Missing Hits to Tracks and Refit______________________________________________________
+const analysis::track_vector insert_missing_hits(const analysis::full_event& event,
+                                         const analysis::track_vector& tracks,
+                                         const script::tracking_options& options,
+                                         const type::real limit_chi_squared) {
+
+  auto out = tracks;
+
+  analysis::full_event non_track_points;
+  non_track_points = analysis::non_tracked_points(event, tracks, true);
+
+  analysis::full_event track_shared_points;
+  int track_shared_points_counter = 0;
+  track_shared_points.clear();
+  track_shared_points.reserve(track_shared_points_counter);
+
+  for (auto& track : out) {
+      if (track.fit_converged()) {
+		  int added_hits_counter = 0;
+		  analysis::full_event added_hits;
+		  added_hits.clear();
+		  added_hits.reserve(added_hits_counter);
+		  //		  std::cout << "NEW TRACK" << std::endl;
+		  //		  std::cout << "non_track_points" <<  non_track_points << std::endl;
+          for (const auto& determined_y : layer_center) {
+			  const auto point_dt = ((determined_y - (track.final_fit().y0.value / units::length)) / (track.final_fit().vy.value / units::velocity)) + (track.final_fit().t0.value / units::time);
+			  const auto point_t = ((determined_y - (track.final_fit().y0.value / units::length)) / (track.final_fit().vy.value / units::velocity));
+			  const auto point_x = (track.final_fit().x0.value / units::length) + (point_t*(track.final_fit().vx.value / units::velocity));
+			  const auto point_y = determined_y;
+			  const auto point_z = (track.final_fit().z0.value / units::length) + (point_t*(track.final_fit().vz.value / units::velocity));
+
+			  for (const auto& hit : non_track_points) {
+				  if ((hit.y / units::length) == determined_y) {
+					  const auto dt = (point_dt - (hit.t / units::time)) / (hit.width.t / units::time);
+					  const auto dx = (point_x - (hit.x / units::length)) / (hit.width.x / units::length);
+					  const auto dz = (point_z - (hit.z / units::length)) / (hit.width.z / units::length);
+					  const auto d = dt*dt + 12.0L*dx*dx + 12.0L*dz*dz;
+					  if (d <= limit_chi_squared && std::count(track_shared_points.begin(), track_shared_points.end(), hit)==0) {
+						  //						  std::cout << "ADDED: " << hit << " Distance: " << d << std::endl;
+						  track_shared_points_counter++;
+						  added_hits_counter++;
+						  added_hits.push_back(hit);
+						  track_shared_points.push_back(hit);
+					  } 
+					  //					  else {
+					  //                          std::cout << "NOT ADDED: " << hit << " Distance: " << d << std::endl;
+					  //					  }
+				  }
+			  }
+          }
+          track.insert(added_hits);
+
+      }
+  }
+
+
   return out;
 }
 //----------------------------------------------------------------------------------------------
@@ -136,7 +196,6 @@ void track_event_bundle(const script::path_vector& paths,
   // track_tree.add_friend(vertex_tree, "vertex");
   // vertex_tree.add_friend(track_tree, "track");
 
-  std::vector<double> layer_center = {6002.5, 6105.5, 8002.5, 8105.5, 8502.5, 8605.5, 8708.5, 8811.5, 8914.5};
   std::vector<std::vector<double>> detector_x_limits = {{-4955, -4045}, {-3955, -3045}, {-2955, -2045}, {-1955, -1045}, {-955, -45}, {45, 955}, {1045, 1955}, {2045, 2955}, {3045, 3955}, {4045, 4955}};
   std::vector<std::vector<double>> detector_z_limits = {{6995, 7905}, {7995, 8905}, {8995, 9905}, {9995, 10905}, {10995, 11905}, {11995, 12905}, {12995, 13905}, {13995, 14905}, {14995, 15905}, {15995, 16905}};
 
@@ -429,11 +488,11 @@ void track_event_bundle(const script::path_vector& paths,
 	const auto event_size = event.size();
 	const auto event_counter_string = std::to_string(event_counter);
 
-	const auto compressed_event_t = options.time_smearing ? mc::time_smear<box::geometry>(mc::compress<box::geometry>(event))
-	   	                                                  : mc::compress<box::geometry>(event);
+    const auto compressed_event_z = options.positionz_smearing ? mc::positionz_smear<box::geometry>(event)
+		                                                     : event;
 
-	const auto compressed_event = options.positionz_smearing ? mc::positionz_smear<box::geometry>(compressed_event_t)
-		                                                     : compressed_event_t;
+	const auto compressed_event = options.time_smearing ? mc::time_smear<box::geometry>(mc::compress<box::geometry>(compressed_event_z))
+	   	                                                  : mc::compress<box::geometry>(compressed_event_z);
 
     const auto compression_size = event_size / static_cast<type::real>(compressed_event.size());
 
@@ -476,6 +535,10 @@ void track_event_bundle(const script::path_vector& paths,
                   std::make_move_iterator(secondary_tracks.cbegin()),
                   std::make_move_iterator(secondary_tracks.cend()));
 
+    tracks = insert_missing_hits(altered_event,
+                                 tracks,
+                                 options,
+                                 20.0L);
 
 //___Fill Digi varibales_________________________________________________________________________
     digi_hit_t.clear();
@@ -487,6 +550,15 @@ void track_event_bundle(const script::path_vector& paths,
     digi_hit_py.clear();
     digi_hit_pz.clear();
     digi_hit_indices.clear();
+    digi_hit_t.reserve(compressed_event.size());
+    digi_hit_x.reserve(compressed_event.size());
+    digi_hit_y.reserve(compressed_event.size());
+    digi_hit_z.reserve(compressed_event.size());
+    digi_hit_e.reserve(compressed_event.size());
+    digi_hit_px.reserve(compressed_event.size());
+    digi_hit_py.reserve(compressed_event.size());
+    digi_hit_pz.reserve(compressed_event.size());
+    digi_hit_indices.reserve(compressed_event.size());
     for (const auto& h : digitized_full_event) {
         digi_hit_e.push_back(h.e / units::energy);
         digi_hit_px.push_back(h.px / units::momentum);
@@ -500,7 +572,7 @@ void track_event_bundle(const script::path_vector& paths,
         digi_hit_y.push_back(h.y / units::length);
         digi_hit_z.push_back(h.z / units::length);
     }
-    Digi_numHits = digi_hit_x.size();
+    Digi_numHits = compressed_event.size();
 //______________________________________________________________________________________________
 
 //___Fill Track varibales_______________________________________________________________________
@@ -537,7 +609,6 @@ void track_event_bundle(const script::path_vector& paths,
     unique_detector_count.clear();
 	track_expected_hit_layer.clear();
 	track_missing_hit_layer.clear();
-
     track_t.reserve(tracks.size());
     track_x.reserve(tracks.size());
     track_y.reserve(tracks.size());
@@ -582,7 +653,6 @@ void track_event_bundle(const script::path_vector& paths,
                 //         event_z.get().push_back(point.z / units::length);
                 //         event_detector.get().push_back(geometry::volume(reduce_to_r3(point)));
                 // }
-
                 geometry::structure_vector unique_geometry;
                 const auto detectors = track.detectors();
                 std::unique_copy(detectors.cbegin(), detectors.cend(), std::back_inserter(unique_geometry));
@@ -620,10 +690,9 @@ void track_event_bundle(const script::path_vector& paths,
                 int expected_hit_counter = 0;
                 expected_hit_layer.reserve(expected_hit_counter);
 
-				// std::cout << "//////////////////////////////////////////////" << std::endl;
-				//				std::cout << "digi_event : " << digi_event << std::endl;
-				// std::cout << "compressed_event : " << compressed_event << std::endl;
-				// std::cout << "track.event(): " << track.event() << std::endl;
+				//				std::cout << "//////////////////////////////////////////////" << std::endl;
+				//				std::cout << "compressed_event : " << compressed_event << std::endl;
+				//				std::cout << "track.event: " << track.event() << std::endl;
 
                 for (const auto& determined_y : layer_center) { //per layer
 					if (track.final_fit().vy.value > 0) {
@@ -632,8 +701,18 @@ void track_event_bundle(const script::path_vector& paths,
 						const auto point_x = (track.final_fit().x0.value / units::length) + (point_t*(track.final_fit().vx.value / units::velocity));
 						const auto point_y = determined_y;
 						const auto point_z = (track.final_fit().z0.value / units::length) + (point_t*(track.final_fit().vz.value / units::velocity));
-						//						std::cout << "determined_y: " << determined_y << " track_y: " << track.final_fit().y0.value/ units::length << " point_t: " << point_t << " point_x: " << point_x << " point_y: " << point_y << " point_z: " << point_z << "\n";
 
+						//                        std::cout << "-------------------------------------------------------------------" << std::endl;
+
+                        for (const auto& hit : compressed_event) {
+                            if ((hit.y / units::length) == determined_y) {
+                                const auto dt = (point_dt - (hit.t / units::time)) / (hit.width.t / units::time);
+                                const auto dx = (point_x - (hit.x / units::length)) / (hit.width.x / units::length);
+                                const auto dz = (point_z - (hit.z / units::length)) / (hit.width.z / units::length);
+                                const auto d = dt*dt + 12.0L*dx*dx + 12.0L*dz*dz;
+								//                                std::cout << " Distance: " << d << std::endl;
+                            }
+                        }
 
 						for (auto x_limit : detector_x_limits) {
 							for (auto z_limit : detector_z_limits) {
@@ -641,16 +720,17 @@ void track_event_bundle(const script::path_vector& paths,
 									//expected hit in this layer
                                     ++expected_hit_counter;
 									expected_hit_layer.push_back(determined_y);
-									// std::cout << "point_t: " << point_dt << " point_x: " << point_x << " point_y: " << point_y << " point_z: " << point_z << std::endl;
+									//									std::cout << "point_t: " << point_dt << " point_x: " << point_x << " point_y: " << point_y << " point_z: " << point_z << std::endl;
 									if (std::count(hits_y.begin(), hits_y.end(), determined_y)==0) { // if there is no hit in that layer for this track
 										//missing hit
                                         ++missing_hit_counter;
 										missing_hit_layer.push_back(determined_y);
-										// std::cout << "missing in layer: " << determined_y << std::endl;
+										//										std::cout << "missing in layer: " << determined_y << std::endl;
 									}
 								}
 							}
 						}
+
 					}
                 }
 

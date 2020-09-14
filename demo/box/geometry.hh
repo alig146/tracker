@@ -36,7 +36,7 @@ namespace box { ////////////////////////////////////////////////////////////////
 
 namespace constants { //////////////////////////////////////////////////////////////////////////
 
-static const auto scintillator_time_resolution  = 1.0L*units::ns;
+static const auto scintillator_time_resolution  = 1.5L*units::ns;
 
 static const auto z_edge_length                 = 90.00L*units::m;
 static const auto x_edge_length                 = 90.00L*units::m;

@@ -230,6 +230,7 @@ const Event time_smear(const Event& points) {
       gen.distribution(random::normal(0.0L, time_error));
       current_error = time_error;
     }
+
     hit.t += gen;
     return hit;
   });
