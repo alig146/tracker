@@ -20,6 +20,8 @@
 #define TRACKER__ANALYSIS__TYPE_HH
 #pragma once
 
+#include <TFile.h>
+
 #include <tracker/core/type.hh>
 #include <tracker/core/units.hh>
 
@@ -37,8 +39,15 @@ using event = std::vector<hit>;
 using event_vector = std::vector<event>;
 //----------------------------------------------------------------------------------------------
 
+//__Indexed Event Types________________________________________________________________________
+using indexed_hit = indexed_r4_point;
+using indexed_event = std::vector<indexed_hit>;
+using indexed_event_vector = std::vector<indexed_event>;
+//----------------------------------------------------------------------------------------------
+//struct _full_hit { real t, x, y, z; r4_point width; };
+
 //__Extended Event Types________________________________________________________________________
-struct full_hit { real t, x, y, z; r4_point width; };
+struct full_hit { real t, x, y, z; r4_point width; std::vector<Int_t> digi_indices;};
 using full_event = std::vector<full_hit>;
 using full_event_vector = std::vector<full_event>;
 //----------------------------------------------------------------------------------------------
@@ -56,7 +65,7 @@ using complete_event_vector = std::vector<complete_event>;
 //----------------------------------------------------------------------------------------------
 
 //__Digi Event Types____________________________________________________________________________
-struct digi_hit { real t, x, y, z, e, px, py, pz; std::vector<double> sim_indices; };
+struct digi_hit { real t, x, y, z, e, px, py, pz; std::vector<Int_t> sim_indices; };
 using digi_event = std::vector<digi_hit>;
 using digi_event_vector = std::vector<digi_event>;
 //----------------------------------------------------------------------------------------------
@@ -65,27 +74,39 @@ using digi_event_vector = std::vector<digi_event>;
 struct fit_parameter { real value, error, min, max; };
 //----------------------------------------------------------------------------------------------
 
-//__Full Hit Stream Operator Overload___________________________________________________________
-inline std::ostream& operator<<(std::ostream& os,
-                                const full_hit& point) {
-  return os << "[(" << point.t / units::time   << ", "
-                    << point.x / units::length << ", "
-                    << point.y / units::length << ", "
-                    << point.z / units::length
-            << ") +/- " << units::scale_r4_length(point.width) << "]";
-}
-//----------------------------------------------------------------------------------------------
 
 //__For Printing Type std::vector_______________________________________________________________
-inline std::ostream& operator<<(std::ostream& os, const std::vector<double> &v) {
+inline std::ostream& operator<<(std::ostream& os, const std::vector<Int_t> &v) {
 		os << "[";
 		for (int i = 0; i < v.size(); ++i) {
 			os << v[i];
 			if (i != v.size() - 1)
 				os << ", ";
 		}
-		os << "]\n";
+		os << "]";
 		return os;
+}
+//----------------------------------------------------------------------------------------------
+//__Full Hit Stream Operator Overload___________________________________________________________
+inline std::ostream& operator<<(std::ostream& os,
+                                const full_hit& point) {
+  return os << "[(" << point.t / units::time   << ", "
+                    << point.x / units::length << ", "
+                    << point.y / units::length << ", "
+                    << point.z / units::length << ") +/- "
+                    << units::scale_r4_length(point.width) <<", indices:"
+                    << point.digi_indices << "]";
+}
+//----------------------------------------------------------------------------------------------
+
+//__Indexed Hit Stream Operator Overload___________________________________________________________
+inline std::ostream& operator<<(std::ostream& os,
+								const indexed_hit& point) {
+	return os << "(" << point.t / units::time   << ", "
+              << point.x / units::length << ", "
+              << point.y / units::length << ", "
+              << point.z / units::length << ",  indices:"
+              << point.digi_indices << ")";
 }
 //----------------------------------------------------------------------------------------------
 
@@ -184,12 +205,19 @@ inline std::ostream& operator<<(std::ostream& os, const digi_event& v) {
 	return os;
 }
 //----------------------------------------------------------------------------------------------
+//__Indexed Hit Equality___________________________________________________________________________
+constexpr bool operator==(const indexed_hit& left,
+                          const indexed_hit& right) {
+  return left.t == right.t && left.x == right.x && left.y == right.y && left.z == right.z
+      && left.digi_indices == right.digi_indices;
+}
+//----------------------------------------------------------------------------------------------
 
 //__Full Hit Equality___________________________________________________________________________
 constexpr bool operator==(const full_hit& left,
                           const full_hit& right) {
   return left.t == right.t && left.x == right.x && left.y == right.y && left.z == right.z
-      && left.width == right.width;
+      && left.width == right.width  && left.digi_indices == right.digi_indices;
 }
 //----------------------------------------------------------------------------------------------
 

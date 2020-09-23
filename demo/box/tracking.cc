@@ -30,10 +30,12 @@
 #include "io.hh"
 #include "TTree.h"
 #include <TFile.h>
+#include "TSystem.h"
 #include <vector>
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector<double>+;
+#pragma link C++ class std::vector<int>+;
 #endif
 
 
@@ -97,8 +99,8 @@ const analysis::track_vector find_tracks(const analysis::full_event& event,
 
 
   const auto joined = analysis::join_all(seeds);
+//std::cout << "inputttttt:" << joined << '\n';
   auto first_tracks = analysis::independent_fit_seeds(joined, options.layer_axis);
-
   for (auto& track : first_tracks)
     track.prune_on_chi_squared(limit_chi_squared);
 
@@ -143,6 +145,7 @@ void track_event_bundle(const script::path_vector& paths,
   TTree integral_tree("integral_tree", "MATHUSLA Tree");
 
   //__Make Vertex Branches________________________________________________________________________
+  gSystem->Load("libMylib.so");
   std::vector<double> vertex_numTracks;
   std::vector<double> vertex_chi2;
   std::vector<double> vertex_chi2_per_dof;
@@ -155,6 +158,7 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> vertex_x_error;
   std::vector<double> vertex_y_error;
   std::vector<double> vertex_z_error;
+  std::vector<std::vector<std::vector<std::vector<int>>>> vertex_indices;
   Double_t numvertices;
 
   auto v_numtracks  = integral_tree.Branch("NumVertices", &numvertices, "NumVertices/D");
@@ -170,6 +174,7 @@ void track_event_bundle(const script::path_vector& paths,
   auto v_chi2 = integral_tree.Branch("Vertex_chi2", "std::vector<double>", &vertex_chi2, 32000, 99);
   auto v_chi2_per_dof = integral_tree.Branch("Vertex_chi2PerNdof", "std::vector<double>", &vertex_chi2_per_dof, 32000, 99);
   auto v_chi2_p_value = integral_tree.Branch("Vertex_chi2PValue", "std::vector<double>", &vertex_chi2_p_value, 32000, 99);
+  auto v_indices = integral_tree.Branch("Vertex_indices", "std::vector<std::vector<std::vector<std::vector<int>>>>", &vertex_indices, 32000, 99);
 
   //__Make Track Branches_________________________________________________________________________
   std::vector<double> track_numHits;
@@ -197,6 +202,9 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> track_vz_error;
   std::vector<std::vector<double>> track_expected_hit_layer;
   std::vector<std::vector<double>> track_missing_hit_layer;
+  std::vector<std::vector<std::vector<Int_t>>> track_indices;
+
+
   Double_t numtracks;
 
   auto t_numtracks  = integral_tree.Branch("NumTracks", &numtracks, "NumTracks/D");
@@ -225,6 +233,8 @@ void track_event_bundle(const script::path_vector& paths,
   auto t_unique_detector_count = integral_tree.Branch("Track_detCount", "std::vector<double>", &unique_detector_count, 32000, 99);
   auto t_expected_hit_layer = integral_tree.Branch("Track_expectedHitLayer", "std::vector<std::vector<double>>", &track_expected_hit_layer, 32000, 99);
   auto t_missing_hit_layer = integral_tree.Branch("Track_missingHitLayer", "std::vector<std::vector<double>>", &track_missing_hit_layer, 32000, 99);
+  auto t_indices = integral_tree.Branch("Track_indices", "std::vector<std::vector<std::vector<Int_t>>>", &track_indices, 32000, 99);
+
   //___Make Digi Branches_____________________________________________________________________
   std::vector<double> digi_hit_t;
   std::vector<double> digi_hit_x;
@@ -234,10 +244,10 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> digi_hit_px;
   std::vector<double> digi_hit_py;
   std::vector<double> digi_hit_pz;
-  std::vector<std::vector<double>> digi_hit_indices;
-  Double_t Digi_numHits;
+  Int_t Digi_numHits;
+  std::vector<std::vector<Int_t>> digi_hit_indices; ///
 
-  auto branch_digi_num_hits  = integral_tree.Branch("Digi_numHits", &Digi_numHits, "Digi_numHits/D");
+  auto branch_digi_num_hits  = integral_tree.Branch("Digi_numHits", &Digi_numHits, "Digi_numHits/I");
   auto branch_t  = integral_tree.Branch("Digi_time", "std::vector<double>", &digi_hit_t, 32000, 99);
   auto branch_x  = integral_tree.Branch("Digi_x", "std::vector<double>", &digi_hit_x, 32000, 99);
   auto branch_y  = integral_tree.Branch("Digi_y", "std::vector<double>", &digi_hit_y, 32000, 99);
@@ -246,7 +256,8 @@ void track_event_bundle(const script::path_vector& paths,
   auto branch_px = integral_tree.Branch("Digi_px", "std::vector<double>", &digi_hit_px, 32000, 99);
   auto branch_py = integral_tree.Branch("Digi_py", "std::vector<double>", &digi_hit_py, 32000, 99);
   auto branch_pz = integral_tree.Branch("Digi_pz", "std::vector<double>", &digi_hit_pz, 32000, 99);
-  auto branch_indices = integral_tree.Branch("Digi_hitIndices", "std::vector<std::vector<double>>", &digi_hit_indices, 32000, 99);
+  auto branch_indices = integral_tree.Branch("Digi_hitIndices", "std::vector<std::vector<Int_t>>", &digi_hit_indices, 32000, 99);
+
   //____________________________________________________________________________________________
 
  //___Make Sim Branches_________________________________________________________________________
@@ -425,6 +436,7 @@ void track_event_bundle(const script::path_vector& paths,
     const auto digitized_full_event = analysis::full_digi_event<box::geometry>(imported_events[event_counter], energy_events[event_counter], complete_events[event_counter]);
 
     const auto digi_event = analysis::add_digi_event<box::geometry>(imported_events[event_counter], energy_events[event_counter], complete_events[event_counter]);
+
 	const auto event = analysis::add_width<box::geometry>(digi_event);
 	const auto event_size = event.size();
 	const auto event_counter_string = std::to_string(event_counter);
@@ -487,6 +499,7 @@ void track_event_bundle(const script::path_vector& paths,
     digi_hit_py.clear();
     digi_hit_pz.clear();
     digi_hit_indices.clear();
+
     for (const auto& h : digitized_full_event) {
         digi_hit_e.push_back(h.e / units::energy);
         digi_hit_px.push_back(h.px / units::momentum);
@@ -494,13 +507,16 @@ void track_event_bundle(const script::path_vector& paths,
         digi_hit_pz.push_back(h.pz / units::momentum);
         digi_hit_indices.push_back(h.sim_indices);
     }
+
+
+    Digi_numHits = digi_hit_e.size();
+
     for (const auto& h : compressed_event) {
         digi_hit_t.push_back(h.t / units::time);
         digi_hit_x.push_back(h.x / units::length);
         digi_hit_y.push_back(h.y / units::length);
         digi_hit_z.push_back(h.z / units::length);
     }
-    Digi_numHits = digi_hit_x.size();
 //______________________________________________________________________________________________
 
 //___Fill Track varibales_______________________________________________________________________
@@ -537,6 +553,7 @@ void track_event_bundle(const script::path_vector& paths,
     unique_detector_count.clear();
 	track_expected_hit_layer.clear();
 	track_missing_hit_layer.clear();
+  track_indices.clear();
 
     track_t.reserve(tracks.size());
     track_x.reserve(tracks.size());
@@ -563,6 +580,7 @@ void track_event_bundle(const script::path_vector& paths,
     unique_detector_count.reserve(tracks.size());
 	track_expected_hit_layer.reserve(tracks.size());
 	track_missing_hit_layer.reserve(tracks.size());
+  track_indices.reserve(tracks.size());
 
     if (event_density >= options.event_density_limit) {
         for (const auto& track : tracks) {
@@ -602,6 +620,8 @@ void track_event_bundle(const script::path_vector& paths,
                 track_vx_error.push_back(track.final_fit().vx.error / units::velocity);
                 track_vy_error.push_back(track.final_fit().vy.error / units::velocity);
                 track_vz_error.push_back(track.final_fit().vz.error / units::velocity);
+                track_indices.push_back(track.final_fit().track_indices);
+                //td::cout << "hello worldddddddddddddddddddddd:" << track_indices << '\n';
 
 				std::vector<double> hits_y;
 				hits_y.clear();
@@ -662,11 +682,11 @@ void track_event_bundle(const script::path_vector& paths,
 		numtracks = tracks.size();
 
 	}
-//______________________________________________________________________________________________
+ //______________________________________________________________________________________________
 
-//___Fill Vertex varibales______________________________________________________________________
+ //___Fill Vertex varibales______________________________________________________________________
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////////////////////////////////////////////////////////////
     box::io::print_tracking_summary(event, tracks);
 
     analysis::track_vector converged_tracks;
@@ -699,6 +719,8 @@ void track_event_bundle(const script::path_vector& paths,
       vertex_chi2.clear();
       vertex_chi2_per_dof.clear();
       vertex_chi2_p_value.clear();
+      vertex_indices.clear();
+
       vertex_t.reserve(vertices.size());
       vertex_x.reserve(vertices.size());
       vertex_y.reserve(vertices.size());
@@ -711,6 +733,8 @@ void track_event_bundle(const script::path_vector& paths,
       vertex_chi2.reserve(vertices.size());
       vertex_chi2_per_dof.reserve(vertices.size());
       vertex_chi2_p_value.reserve(vertices.size());
+      vertex_indices.reserve(vertices.size());
+
 	  if (event_density >= options.event_density_limit) {
 		  for (const auto& vertex : vertices) {
 			  if (vertex.fit_converged()) {
@@ -726,14 +750,13 @@ void track_event_bundle(const script::path_vector& paths,
 				  vertex_x_error.push_back(vertex.final_fit().x.error / units::length);
 				  vertex_y_error.push_back(vertex.final_fit().y.error / units::length);
 				  vertex_z_error.push_back(vertex.final_fit().z.error / units::length);
+          vertex_indices.push_back(vertex.final_fit().vertex_indices);
 			  }
 		  }
 		  numvertices = vertices.size();
 	  }
 //______________________________________________________________________________________________
-
     integral_tree.Fill();
-
     canvas.draw();
 
 

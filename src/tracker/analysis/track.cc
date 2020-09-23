@@ -90,6 +90,11 @@ track::fit_parameters _guess_track(const full_event& points) {
   const auto vy = dy / dt;
   const auto vz = dz / dt;
 
+  std::vector<std::vector<int>> indices;
+  for (const auto& full_hit : points){
+        indices.push_back(full_hit.digi_indices);
+      }
+
   // NOTE: should V be constrained?
   return {{first_t, first_t.error, 0, 0},
           {first_x, first_x.error, 0, 0},
@@ -97,7 +102,7 @@ track::fit_parameters _guess_track(const full_event& points) {
           {first_z, first_z.error, 0, 0},
           {vx, vx.error,           0, 0},
           {vy, vy.error,           0, 0},
-          {vz, vz.error,           0, 0}};
+          {vz, vz.error,           0, 0}, indices};
 }
 //----------------------------------------------------------------------------------------------
 
@@ -197,7 +202,6 @@ track::track() {
   clear();
 }
 //----------------------------------------------------------------------------------------------
-
 //__Track Constructor___________________________________________________________________________
 track::track(const analysis::event& points,
              const Coordinate direction)
@@ -652,7 +656,15 @@ const std::vector<hit> track::event() const {
   return out;
 }
 //----------------------------------------------------------------------------------------------
-
+//__Get indexed_Event from Track________________________________________________________________________
+const std::vector<indexed_hit> track::indexed_event() const {
+  std::vector<indexed_hit> out;
+  out.reserve(size());
+  util::algorithm::back_insert_transform(_full_event, out,
+    [](const auto& point) { return reduce_to_indexed_r4(point); });
+  return out;
+}
+//----------------------------------------------------------------------------------------------
 //__Reset Track_________________________________________________________________________________
 std::size_t track::reset(const analysis::event& points) {
   return reset(add_width(points));
@@ -944,11 +956,11 @@ std::ostream& operator<<(std::ostream& os,
     _print_track_parameters(os, track.guess_fit(), 4UL);
 
     os << "* Event: \n";
-    const auto points = track.event();
+    const auto points = track.indexed_event();
     const auto& detectors = track.detectors();
     const auto size = points.size();
     for (std::size_t i{}; i < size; ++i)
-      os << "    " << detectors[i] << " " << units::scale_r4_length(points[i]) << "\n";
+      os << "    " << detectors[i] << " " << points[i] << "\n";
 
   } else {
 
@@ -958,11 +970,11 @@ std::ostream& operator<<(std::ostream& os,
 
     os << "* Event: \n";
     os << "    front: " << units::scale_r4_length(track.front()) << "\n\n";
-    const auto points = track.event();
+    const auto points = track.indexed_event();
     const auto& detectors = track.detectors();
     const auto size = points.size();
     for (std::size_t i{}; i < size; ++i)
-      os << "      " << detectors[i] << " " << units::scale_r4_length(points[i]) << "\n";
+      os << "      " << detectors[i] << " " << points[i] << "\n";
     os << "\n    back:  " << units::scale_r4_length(track.back())  << "\n";
 
     os << "* Statistics: \n"

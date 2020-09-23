@@ -32,7 +32,7 @@ class vertex {
 public:
   class tree;
   enum class parameter { T, X, Y, Z };
-  struct fit_parameters { fit_parameter t, x, y, z; };
+  struct fit_parameters { fit_parameter t, x, y, z; std::vector<std::vector<std::vector<int>>> vertex_indices; };
 
   static constexpr std::size_t free_parameter_count = 4UL;
   using covariance_matrix_type = real_array<free_parameter_count * free_parameter_count>;

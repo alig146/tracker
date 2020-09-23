@@ -35,7 +35,7 @@ public:
   class tree;
   // TODO: class graph;
   enum class parameter { T0, X0, Y0, Z0, VX, VY, VZ };
-  struct fit_parameters { fit_parameter t0, x0, y0, z0, vx, vy, vz; };
+  struct fit_parameters { fit_parameter t0, x0, y0, z0, vx, vy, vz; std::vector<std::vector<int>> track_indices;};
 
   static constexpr std::size_t free_parameter_count = 6UL;
   using covariance_matrix_type = real_array<free_parameter_count * free_parameter_count>;
@@ -106,6 +106,8 @@ public:
   real vx_error() const { return _final.vx.error; }
   real vy_error() const { return _final.vy.error; }
   real vz_error() const { return _final.vz.error; }
+  std::vector<std::vector<int>> indices() const { return _final.track_indices; }
+
   real error(const parameter p) const;
 
   const fit_parameters guess_fit() const { return _guess; }
@@ -136,6 +138,7 @@ public:
   const hit front() const;
   const hit back() const;
   const analysis::event event() const;
+  const analysis::indexed_event indexed_event() const;
 
   const full_hit full_front() const noexcept { return _full_event.front(); }
   const full_hit full_back() const noexcept { return _full_event.back(); }
@@ -241,6 +244,7 @@ constexpr bool operator==(const track::fit_parameters& left,
       && left.vx == right.vx
       && left.vy == right.vy
       && left.vz == right.vz;
+
 }
 constexpr bool operator!=(const track::fit_parameters& left,
                           const track::fit_parameters& right) {

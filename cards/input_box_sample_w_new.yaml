@@ -21,7 +21,7 @@ event-density-limit:   0.00001
 geometry-file:                demo/box/resources/world.gdml
 geometry-default-time-error:  1.0
 layer-count:                  9
-scintillator_z_width:         450.0 
+scintillator_z_width:         450.0
 scintillator_x_width:         4.5
 scintillator_height:          2.0
 layer_spacing:                100.0
@@ -33,18 +33,18 @@ x_edge_length:                9000.0
 
 # Data Setup
 data-directories: ...
-  - /home/ag1378/cmslink/bobthebuilder/Mu-Simulation/data/20200820/231828/, 0
+  - /home/liaojiah/MATHUSLA/Mu-Simulation/data/20200804/155135/, 0
 
 data-file-extension:       root
 data-position-keys:        Hit_time, Hit_x, Hit_y, Hit_z
 data-position-error-keys:  dT, dX, dY, dZ
 data-detector-key:         Hit_detId
-data-track-id-key:         Hit_G4TrackId 
-data-parent-id-key:        Hit_G4ParentTrackId 
+data-track-id-key:         Hit_G4TrackId
+data-parent-id-key:        Hit_G4ParentTrackId
 data-momentum-keys:        Hit_energy, Hit_particlePx, Hit_particlePy, Hit_particlePz
 
 # Statistics Setup
-statistics-directory:       /home/ag1378/cmslink/bobthebuilder/tracker
+statistics-directory:       /home/liaojiah/MATHUSLA/tracker
 statistics-file-prefix:     statistics
 statistics-file-extension:  root
 # merge-output-trees:         true

@@ -325,6 +325,7 @@ const structure_value volume(const r3_point& point) {
 const structure_value volume(const r4_point& point) {
   return volume(reduce_to_r3(point));
 }
+
 //----------------------------------------------------------------------------------------------
 
 //__Box Volume Stream Overload__________________________________________________________________
