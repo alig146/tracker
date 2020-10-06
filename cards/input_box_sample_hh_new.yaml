@@ -10,16 +10,16 @@ time-smearing:         true
 positionz-smearing:    true
 simulated-efficiency:  1
 simulated-noise-rate:  0
-event-time-window:     350, 800
+event-time-window:     300, 700
 layer-axis:            Y
-layer-depth:           10
-line-width:            25				
+layer-depth:           20
+line-width:            50
 seed-size:             3
 event-density-limit:   0.00001
 
 # Geometry Setup
 geometry-file:                demo/box/resources/world.gdml
-geometry-default-time-error:  1.0
+geometry-default-time-error:  1.5
 layer-count:                  9
 scintillator_z_width:         450.0
 scintillator_x_width:         4.5
@@ -39,8 +39,8 @@ data-file-extension:       root
 data-position-keys:        Hit_time, Hit_x, Hit_y, Hit_z
 data-position-error-keys:  dT, dX, dY, dZ
 data-detector-key:         Hit_detId
-data-track-id-key:         Hit_G4TrackId 
-data-parent-id-key:        Hit_G4ParentTrackId 
+data-track-id-key:         Hit_G4TrackId
+data-parent-id-key:        Hit_G4ParentTrackId
 data-momentum-keys:        Hit_energy, Hit_particlePx, Hit_particlePy, Hit_particlePz
 
 # Statistics Setup

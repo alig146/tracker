@@ -47,7 +47,7 @@ using indexed_event_vector = std::vector<indexed_event>;
 //struct _full_hit { real t, x, y, z; r4_point width; };
 
 //__Extended Event Types________________________________________________________________________
-struct full_hit { real t, x, y, z; r4_point width; std::vector<Int_t> digi_indices;};
+struct full_hit { real t, x, y, z; r4_point width; std::vector<int> hit_indices; int digi_indices;};
 using full_event = std::vector<full_hit>;
 using full_event_vector = std::vector<full_event>;
 //----------------------------------------------------------------------------------------------
@@ -59,13 +59,13 @@ using energy_event_vector = std::vector<energy_event>;
 //----------------------------------------------------------------------------------------------
 
 //__Extended Complete Event Types_______________________________________________________________
-struct complete_hit { real t, x, y, z, e, px, py, pz, det_id, index; };
+struct complete_hit { real t, x, y, z, e, px, py, pz, det_id, hit_index; };
 using complete_event = std::vector<complete_hit>;
 using complete_event_vector = std::vector<complete_event>;
 //----------------------------------------------------------------------------------------------
 
 //__Digi Event Types____________________________________________________________________________
-struct digi_hit { real t, x, y, z, e, px, py, pz; std::vector<Int_t> sim_indices; };
+struct digi_hit { real t, x, y, z, e, px, py, pz; std::vector<int> sim_indices; };
 using digi_event = std::vector<digi_hit>;
 using digi_event_vector = std::vector<digi_event>;
 //----------------------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ struct fit_parameter { real value, error, min, max; };
 
 
 //__For Printing Type std::vector_______________________________________________________________
-inline std::ostream& operator<<(std::ostream& os, const std::vector<Int_t> &v) {
+inline std::ostream& operator<<(std::ostream& os, const std::vector<int> &v) {
 		os << "[";
 		for (int i = 0; i < v.size(); ++i) {
 			os << v[i];
@@ -94,8 +94,9 @@ inline std::ostream& operator<<(std::ostream& os,
                     << point.x / units::length << ", "
                     << point.y / units::length << ", "
                     << point.z / units::length << ") +/- "
-                    << units::scale_r4_length(point.width) <<", indices:"
-                    << point.digi_indices << "]";
+                    << units::scale_r4_length(point.width) <<", hit indices:"
+                    << point.hit_indices << " digi index:"
+										<< point.digi_indices << "]";
 }
 //----------------------------------------------------------------------------------------------
 
@@ -105,8 +106,9 @@ inline std::ostream& operator<<(std::ostream& os,
 	return os << "(" << point.t / units::time   << ", "
               << point.x / units::length << ", "
               << point.y / units::length << ", "
-              << point.z / units::length << ",  indices:"
-              << point.digi_indices << ")";
+              << point.z / units::length << ", sim hit indices:"
+              << point.hit_indices << " digi index:"
+							<< point.digi_index << ")";
 }
 //----------------------------------------------------------------------------------------------
 
@@ -133,7 +135,7 @@ inline std::ostream& operator<<(std::ostream& os,
 			  << point.py / units::momentum << ", "
 			  << point.pz / units::momentum << ", "
               << point.det_id << ", "
-              << point.index
+              << point.hit_index
 			  << ")";
 }
 //----------------------------------------------------------------------------------------------
@@ -209,7 +211,7 @@ inline std::ostream& operator<<(std::ostream& os, const digi_event& v) {
 constexpr bool operator==(const indexed_hit& left,
                           const indexed_hit& right) {
   return left.t == right.t && left.x == right.x && left.y == right.y && left.z == right.z
-      && left.digi_indices == right.digi_indices;
+      ;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -217,7 +219,7 @@ constexpr bool operator==(const indexed_hit& left,
 constexpr bool operator==(const full_hit& left,
                           const full_hit& right) {
   return left.t == right.t && left.x == right.x && left.y == right.y && left.z == right.z
-      && left.width == right.width  && left.digi_indices == right.digi_indices;
+      && left.width == right.width ;
 }
 //----------------------------------------------------------------------------------------------
 

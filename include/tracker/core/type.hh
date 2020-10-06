@@ -60,7 +60,7 @@ using integer_vector = std::vector<integer>;
 struct r2_point { real     x, y;    };
 struct r3_point { real     x, y, z; };
 struct r4_point { real  t, x, y, z; };
-struct indexed_r4_point { real t, x, y, z; std::vector<Int_t> digi_indices;};
+struct indexed_r4_point { real t, x, y, z; std::vector<int> hit_indices;int digi_index;};
 enum class Coordinate { T, X, Y, Z  };
 //----------------------------------------------------------------------------------------------
 
@@ -189,7 +189,7 @@ constexpr r4_point reduce_to_r4(const T& point) {
 }
 template<class T, typename = std::enable_if_t<is_r4_type_v<T>>>
 constexpr indexed_r4_point reduce_to_indexed_r4(const T& point) {
-  return {point.t, point.x, point.y, point.z, point.digi_indices};
+  return {point.t, point.x, point.y, point.z, point.hit_indices, point.digi_indices};
 }
 //----------------------------------------------------------------------------------------------
 

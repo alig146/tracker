@@ -113,10 +113,10 @@ real _vertex_squared_residual(const real t,
 vertex::fit_parameters _guess_vertex(const track_vector& tracks) {
   const auto size = tracks.size();
 
-  std::vector<std::vector<std::vector<int>>> indices;
+  std::vector<int> indices;
 
   for (const auto& track : tracks){
-        indices.push_back(track.indices());
+        indices.push_back(track.track_index());
       }
 
   std::vector<full_hit> track_fronts;
@@ -541,8 +541,9 @@ std::ostream& operator<<(std::ostream& os,
                     << track.z0_value() / units::length   << ", "
                     << track.vx_value() / units::velocity << ", "
                     << track.vy_value() / units::velocity << ", "
-                    << track.vz_value() / units::velocity << ", "
-                    << track.indices() << ")\n";
+                    << track.vz_value() / units::velocity << ", track index: ["
+                    << track.track_index() << "], its associated digi indices:"
+                    << track.digi_indices() << ")\n";
     }
 
   } else {
@@ -567,8 +568,9 @@ std::ostream& operator<<(std::ostream& os,
                    << track.z0_value() / units::length   << ", "
                    << track.vx_value() / units::velocity << ", "
                    << track.vy_value() / units::velocity << ", "
-                   << track.vz_value() / units::velocity << ", "
-                   << track.indices() <<")\n";
+                   << track.vz_value() / units::velocity << ", track index:"
+                   << track.track_index() << ", its associated digi indices:"
+                   << track.digi_indices() << ")\n";
     }
 
     os << "* Statistics: \n"

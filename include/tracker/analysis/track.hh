@@ -35,7 +35,7 @@ public:
   class tree;
   // TODO: class graph;
   enum class parameter { T0, X0, Y0, Z0, VX, VY, VZ };
-  struct fit_parameters { fit_parameter t0, x0, y0, z0, vx, vy, vz; std::vector<std::vector<int>> track_indices;};
+  struct fit_parameters { fit_parameter t0, x0, y0, z0, vx, vy, vz; std::vector<int> digi_indices; int track_index;};
 
   static constexpr std::size_t free_parameter_count = 6UL;
   using covariance_matrix_type = real_array<free_parameter_count * free_parameter_count>;
@@ -106,7 +106,8 @@ public:
   real vx_error() const { return _final.vx.error; }
   real vy_error() const { return _final.vy.error; }
   real vz_error() const { return _final.vz.error; }
-  std::vector<std::vector<int>> indices() const { return _final.track_indices; }
+  std::vector<int> digi_indices() const { return _final.digi_indices; }
+  int track_index() const { return _final.track_index; }
 
   real error(const parameter p) const;
 
