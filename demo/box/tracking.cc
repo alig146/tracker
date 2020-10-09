@@ -216,7 +216,7 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> vertex_x_error;
   std::vector<double> vertex_y_error;
   std::vector<double> vertex_z_error;
-  std::vector<std::vector<std::vector<std::vector<int>>>> vertex_indices;
+  std::vector<std::vector<int>> vertex_indices;
   Double_t numvertices;
 
   auto v_numtracks  = integral_tree.Branch("NumVertices", &numvertices, "NumVertices/D");
@@ -232,7 +232,7 @@ void track_event_bundle(const script::path_vector& paths,
   auto v_chi2 = integral_tree.Branch("Vertex_chi2", "std::vector<double>", &vertex_chi2, 32000, 99);
   auto v_chi2_per_dof = integral_tree.Branch("Vertex_chi2PerNdof", "std::vector<double>", &vertex_chi2_per_dof, 32000, 99);
   auto v_chi2_p_value = integral_tree.Branch("Vertex_chi2PValue", "std::vector<double>", &vertex_chi2_p_value, 32000, 99);
-  //auto v_indices = integral_tree.Branch("Vertex_indices", "std::vector<std::vector<std::vector<std::vector<int>>>>", &vertex_indices, 32000, 99);
+  auto v_indices = integral_tree.Branch("Vertex_trackIndices", "<std::vector<std::vector<int>>", &vertex_indices, 32000, 99);
 
   //__Make Track Branches_________________________________________________________________________
   std::vector<double> track_numHits;
@@ -260,8 +260,8 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> track_vz_error;
   std::vector<std::vector<double>> track_expected_hit_layer;
   std::vector<std::vector<double>> track_missing_hit_layer;
-  std::vector<std::vector<std::vector<int>>> track_indices;
-
+  std::vector<std::vector<int>> track_indices;
+  std::vector<int> track_index;
 
   Double_t numtracks;
 
@@ -291,7 +291,8 @@ void track_event_bundle(const script::path_vector& paths,
   auto t_unique_detector_count = integral_tree.Branch("Track_detCount", "std::vector<double>", &unique_detector_count, 32000, 99);
   auto t_expected_hit_layer = integral_tree.Branch("Track_expectedHitLayer", "std::vector<std::vector<double>>", &track_expected_hit_layer, 32000, 99);
   auto t_missing_hit_layer = integral_tree.Branch("Track_missingHitLayer", "std::vector<std::vector<double>>", &track_missing_hit_layer, 32000, 99);
-  //auto t_indices = integral_tree.Branch("Track_indices", "std::vector<std::vector<std::vector<int>>>", &track_indices, 32000, 99);
+  auto t_indices = integral_tree.Branch("Track_digiIndices", "std::vector<std::vector<int>>", &track_indices, 32000, 99);
+  auto t_index = integral_tree.Branch("Track_trackindex", "std::vector<int>", &track_index, 32000, 99);
 
   //___Make Digi Branches_____________________________________________________________________
   std::vector<double> digi_hit_t;
@@ -591,11 +592,23 @@ void track_event_bundle(const script::path_vector& paths,
     }
 //______________________________________________________________________________________________
 
+analysis::index_z_vector compare_vector;
+
 //___Fill Track varibales_______________________________________________________________________
 // box::io::save_tracks(tracks, canvas, track_tree, options);
+    int individual_track_index = 0;
     for (const auto& track : tracks) {
         if (options.verbose_output)
-            std::cout << track << "\n";
+            if(track.fit_converged()){
+              std::cout << "* Track Index: " << individual_track_index << '\n';
+              std::cout << track << "\n";
+              auto compare = analysis::index_z {individual_track_index, track.final_fit().z0.value};
+              compare_vector.push_back(compare);
+              track_index.push_back(individual_track_index);
+              individual_track_index++;
+          }else{
+            std::cout << track << "\n";}
+
         if (options.draw_events)
             box::io::draw_track(canvas, track);
     }
@@ -692,8 +705,7 @@ void track_event_bundle(const script::path_vector& paths,
                 track_vx_error.push_back(track.final_fit().vx.error / units::velocity);
                 track_vy_error.push_back(track.final_fit().vy.error / units::velocity);
                 track_vz_error.push_back(track.final_fit().vz.error / units::velocity);
-                //track_indices.push_back(track.final_fit().track_indices);
-                //td::cout << "hello worldddddddddddddddddddddd:" << track_indices << '\n';
+                track_indices.push_back(track.final_fit().digi_indices);
 
 				std::vector<double> hits_y;
 				hits_y.clear();
@@ -830,7 +842,19 @@ void track_event_bundle(const script::path_vector& paths,
 				  vertex_x_error.push_back(vertex.final_fit().x.error / units::length);
 				  vertex_y_error.push_back(vertex.final_fit().y.error / units::length);
 				  vertex_z_error.push_back(vertex.final_fit().z.error / units::length);
-          //vertex_indices.push_back(vertex.final_fit().vertex_indices);
+
+
+          std::vector<int> vertex_tIndices;
+          vertex_tIndices.clear();
+          for (const auto& track : vertex.tracks()) {
+            auto z = track.z0_value();
+            for (const auto& compare :compare_vector){
+            if (z==compare.z0){
+               vertex_tIndices.push_back(compare.index);
+             }
+          }
+          }
+          vertex_indices.push_back(vertex_tIndices);
 			  }
 		  }
 		  numvertices = vertices.size();

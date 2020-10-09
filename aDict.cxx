@@ -310,7 +310,7 @@ namespace {
     };
     static const char* includePaths[] = {
 "/home/liaojiah/anaconda3/envs/MATHUSLA/include/",
-"/home/liaojiah/MATHUSLA/tracker/",
+"/home/liaojiah/MATHUSLA/tracker/tracker/",
 0
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(

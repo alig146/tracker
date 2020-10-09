@@ -35,7 +35,7 @@ public:
   class tree;
   // TODO: class graph;
   enum class parameter { T0, X0, Y0, Z0, VX, VY, VZ };
-  struct fit_parameters { fit_parameter t0, x0, y0, z0, vx, vy, vz; std::vector<int> digi_indices; int track_index;};
+  struct fit_parameters { fit_parameter t0, x0, y0, z0, vx, vy, vz; std::vector<int> digi_indices;};
 
   static constexpr std::size_t free_parameter_count = 6UL;
   using covariance_matrix_type = real_array<free_parameter_count * free_parameter_count>;
@@ -107,7 +107,6 @@ public:
   real vy_error() const { return _final.vy.error; }
   real vz_error() const { return _final.vz.error; }
   std::vector<int> digi_indices() const { return _final.digi_indices; }
-  int track_index() const { return _final.track_index; }
 
   real error(const parameter p) const;
 
@@ -193,6 +192,8 @@ public:
 
   void clear();
 
+  //----------------------------------------------------------------------------------------------
+
   void reparameterize(const Coordinate direction);
 
   struct plotting_keys {
@@ -260,6 +261,7 @@ std::ostream& operator<<(std::ostream& os,
 
 //__Vector of Tracks____________________________________________________________________________
 using track_vector = std::vector<track>;
+
 //----------------------------------------------------------------------------------------------
 
 //__Track Data Tree Specialization______________________________________________________________

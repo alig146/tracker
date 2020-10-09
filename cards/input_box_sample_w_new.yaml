@@ -44,7 +44,7 @@ data-parent-id-key:        Hit_G4ParentTrackId
 data-momentum-keys:        Hit_energy, Hit_particlePx, Hit_particlePy, Hit_particlePz
 
 # Statistics Setup
-statistics-directory:       /home/liaojiah/MATHUSLA/tracker
+statistics-directory:       /home/liaojiah/MATHUSLA/tracker/tracker
 statistics-file-prefix:     statistics
 statistics-file-extension:  root
 # merge-output-trees:         true

@@ -44,7 +44,6 @@ using indexed_hit = indexed_r4_point;
 using indexed_event = std::vector<indexed_hit>;
 using indexed_event_vector = std::vector<indexed_event>;
 //----------------------------------------------------------------------------------------------
-//struct _full_hit { real t, x, y, z; r4_point width; };
 
 //__Extended Event Types________________________________________________________________________
 struct full_hit { real t, x, y, z; r4_point width; std::vector<int> hit_indices; int digi_indices;};
@@ -73,8 +72,8 @@ using digi_event_vector = std::vector<digi_event>;
 //__Fitting Parameter Type______________________________________________________________________
 struct fit_parameter { real value, error, min, max; };
 //----------------------------------------------------------------------------------------------
-
-
+struct index_z {int index; real z0;};
+using index_z_vector = std::vector<index_z>;
 //__For Printing Type std::vector_______________________________________________________________
 inline std::ostream& operator<<(std::ostream& os, const std::vector<int> &v) {
 		os << "[";

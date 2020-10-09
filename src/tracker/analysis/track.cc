@@ -69,7 +69,7 @@ real _track_squared_residual(const real t0,
 //----------------------------------------------------------------------------------------------
 
 //__Fast Guess of Initial Track Parameters______________________________________________________
-track::fit_parameters _guess_track(const full_event& points, const int track_index) {
+track::fit_parameters _guess_track(const full_event& points) {
   using namespace stat::type;
   using namespace stat::error;
 
@@ -102,7 +102,7 @@ track::fit_parameters _guess_track(const full_event& points, const int track_ind
           {first_z, first_z.error, 0, 0},
           {vx, vx.error,           0, 0},
           {vy, vy.error,           0, 0},
-          {vz, vz.error,           0, 0}, indices, track_index};
+          {vz, vz.error,           0, 0}, indices};
 }
 //----------------------------------------------------------------------------------------------
 
@@ -682,10 +682,9 @@ std::size_t track::reset(const analysis::full_event& points) {
   _delta_chi2.reserve(new_size);
 
   if (new_size > 1UL) {
-    for (int i = 0; i < points.size(); i++) {
-    _guess = _guess_track(_full_event, i);
+
+    _guess = _guess_track(_full_event);
     _final = _guess;
-  }
 
     if (_fit_event_minuit(_full_event, _direction, _final, _covariance)) {
       std::transform(begin, end, std::back_inserter(_delta_chi2),
@@ -705,6 +704,7 @@ std::size_t track::reset(const analysis::full_event& points) {
   } else {
     _guess = {};
   }
+
 
   _final = {};
   _covariance = {};
@@ -913,8 +913,6 @@ std::ostream& _print_track_parameters(std::ostream& os,
                                       const track::fit_parameters& parameters,
                                       std::size_t prefix_count) {
   return os
-   << std::string(prefix_count, ' ')
-    << "Track Index: " << std::setw(10) << parameters.track_index << "\n"
     << std::string(prefix_count, ' ')
       << "T0: " << std::setw(10) << parameters.t0.value / units::time
                 << "  (+/- " << std::setw(10) << parameters.t0.error / units::time     << ")  "
@@ -951,7 +949,7 @@ std::ostream& _print_track_parameters(std::ostream& os,
 std::ostream& operator<<(std::ostream& os,
                          const track& track) {
   static const std::string bar(80, '-');
-  os << bar << "\n";
+  //os << bar << "\n";
   os.precision(6);
 
   if (track.fit_diverged()) {

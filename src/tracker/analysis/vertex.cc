@@ -115,9 +115,7 @@ vertex::fit_parameters _guess_vertex(const track_vector& tracks) {
 
   std::vector<int> indices;
 
-  for (const auto& track : tracks){
-        indices.push_back(track.track_index());
-      }
+
 
   std::vector<full_hit> track_fronts;
   track_fronts.reserve(size);
@@ -150,10 +148,9 @@ vertex::fit_parameters _guess_vertex(const track_vector& tracks) {
   return {{average_point.t, stat::error::propagate_average(t_errors), 0, 0},
           {average_point.x, stat::error::propagate_average(x_errors), 0, 0},
           {average_point.y, stat::error::propagate_average(y_errors), 0, 0},
-          {average_point.z, stat::error::propagate_average(z_errors), 0, 0},
-          indices};
+          {average_point.z, stat::error::propagate_average(z_errors), 0, 0}};
 }
-//----------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 
 //__Gaussian Negative Log Likelihood Calculation________________________________________________
 thread_local track_vector&& _nll_fit_tracks = {};
@@ -541,8 +538,7 @@ std::ostream& operator<<(std::ostream& os,
                     << track.z0_value() / units::length   << ", "
                     << track.vx_value() / units::velocity << ", "
                     << track.vy_value() / units::velocity << ", "
-                    << track.vz_value() / units::velocity << ", track index: ["
-                    << track.track_index() << "], its associated digi indices:"
+                    << track.vz_value() / units::velocity <<  ", its associated digi indices:"
                     << track.digi_indices() << ")\n";
     }
 
@@ -568,8 +564,7 @@ std::ostream& operator<<(std::ostream& os,
                    << track.z0_value() / units::length   << ", "
                    << track.vx_value() / units::velocity << ", "
                    << track.vy_value() / units::velocity << ", "
-                   << track.vz_value() / units::velocity << ", track index:"
-                   << track.track_index() << ", its associated digi indices:"
+                   << track.vz_value() / units::velocity << ", its associated digi indices:"
                    << track.digi_indices() << ")\n";
     }
 
@@ -677,7 +672,7 @@ void vertex::tree::reserve(std::size_t capacity) {
 //----------------------------------------------------------------------------------------------
 
 //__Pairwise Fit Tracks to Vertices_____________________________________________________________
-const vertex_vector pairwise_fit_tracks(const track_vector& tracks) {
+const vertex_vector pairwise_fit_tracks(track_vector tracks) {
   const auto size = tracks.size();
   if (size == 0UL)
     return vertex_vector{};

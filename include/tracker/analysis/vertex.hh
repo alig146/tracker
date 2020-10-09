@@ -32,7 +32,7 @@ class vertex {
 public:
   class tree;
   enum class parameter { T, X, Y, Z };
-  struct fit_parameters { fit_parameter t, x, y, z; std::vector<int> track_indices; };
+  struct fit_parameters { fit_parameter t, x, y, z;};
 
   static constexpr std::size_t free_parameter_count = 4UL;
   using covariance_matrix_type = real_array<free_parameter_count * free_parameter_count>;
@@ -225,7 +225,7 @@ private:
 //----------------------------------------------------------------------------------------------
 
 //__Pairwise Fit Tracks to Vertices_____________________________________________________________
-const vertex_vector pairwise_fit_tracks(const track_vector& tracks);
+const vertex_vector pairwise_fit_tracks(track_vector tracks);
 //----------------------------------------------------------------------------------------------
 
 } /* namespace analysis */ /////////////////////////////////////////////////////////////////////
